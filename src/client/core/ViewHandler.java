@@ -1,6 +1,7 @@
 package client.core;
 
 import client.views.chat.ChatViewController;
+import client.views.username.UsernameViewController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -12,6 +13,7 @@ public class ViewHandler
 {
   private Stage stage;
   private Scene chatScene;
+  private Scene userScene;
   private ViewModelFactory viewModelFactory;
 
   public ViewHandler(Stage stage, ViewModelFactory viewModelFactory)
@@ -20,26 +22,52 @@ public class ViewHandler
     this.viewModelFactory = viewModelFactory;
   }
 
-  public void start() throws IOException
+  public void start()
   {
-    openView("Chat");
+    openUserView();
+    stage.show();
   }
 
-  private void openView(String viewToOpen) throws IOException
+  private void openUserView()
   {
     FXMLLoader loader = new FXMLLoader();
-    Parent root = null;
-
-    loader.setLocation(getClass().getResource("../views/chat/" + viewToOpen + "View.fxml"));
-    root = loader.load();
-    if ("Chat".equals(viewToOpen)) {
-      ChatViewController controller = loader.getController();
-      controller.init(viewModelFactory.getChatViewModel());
-      stage.setTitle("Chat");
+    if (userScene == null)
+    {
+      Parent root = getRootByPath("../views/username/UsernameView.fxml", loader);
+      UsernameViewController controller = loader.getController();
+      controller.init(viewModelFactory.getUsernameViewModel(), this);
+      userScene = new Scene(root);
     }
-    chatScene = new Scene(root);
-    stage.setScene(chatScene);
-    stage.show();
+    stage.setTitle("Username");
+    stage.setScene(userScene);
+  }
 
+  public void openChatView()
+  {
+    FXMLLoader loader = new FXMLLoader();
+    if (chatScene == null)
+    {
+      Parent root = getRootByPath("../views/chat/ChatView.fxml", loader);
+      ChatViewController controller = loader.getController();
+      controller.init(viewModelFactory.getChatViewModel(), this);
+      chatScene = new Scene(root);
+    }
+    stage.setTitle("Chat");
+    stage.setScene(chatScene);
+  }
+
+  private Parent getRootByPath(String path, FXMLLoader loader)
+  {
+    loader.setLocation(getClass().getResource(path));
+    Parent root = null;
+    try
+    {
+      root = loader.load();
+    }
+    catch (IOException e)
+    {
+      e.printStackTrace();
+    }
+    return root;
   }
 }

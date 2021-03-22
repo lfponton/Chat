@@ -5,7 +5,6 @@ import client.network.Client;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.util.List;
 
 public class MessageSenderManager implements MessageSender
 {
@@ -28,9 +27,14 @@ public class MessageSenderManager implements MessageSender
     return client.sendMessage(message);
   }
 
-  @Override public List<String> getMessages()
+  @Override public void createUser(String username)
   {
-    return client.getMessages();
+    client.createUser(username);
+  }
+
+  @Override public String getNumberOfConnections()
+  {
+    return client.getNumberOfConnections();
   }
 
   @Override public void addPropertyChangeListener(String name,

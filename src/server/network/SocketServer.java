@@ -13,17 +13,20 @@ public class SocketServer
   public SocketServer(MessageSender messageSender)
   {
     this.messageSender = messageSender;
+
   }
 
   public void startServer() {
     try
     {
       ServerSocket server = new ServerSocket(1234);
+      Pool pool = new Pool();
       System.out.println("Server started.");
       while (true) {
         Socket socket = server.accept();
         System.out.println("Client connected.");
-        new Thread(new SocketHandler(socket, messageSender)).start();
+        SocketHandler handler = new SocketHandler(socket, messageSender, pool);
+        new Thread(handler).start();
       }
     }
     catch (IOException e)

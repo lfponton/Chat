@@ -10,10 +10,12 @@ public class MessageSenderManager implements MessageSender
   private PropertyChangeSupport support;
   private List<String> messages;
 
+
   public MessageSenderManager() {
     support = new PropertyChangeSupport(this);
     messages = new ArrayList<>();
   }
+
   @Override public String sendMessage(String message)
   {
     messages.add(message);
@@ -23,12 +25,7 @@ public class MessageSenderManager implements MessageSender
       result += m + "\n";
     }
     support.firePropertyChange("NewMessage", null, result);
-    return result; // TODO Maybe it just returns the message?
-  }
-
-  @Override public List<String> getMessages()
-  {
-    return null;
+    return result;
   }
 
   @Override public void addPropertyChangeListener(String name,

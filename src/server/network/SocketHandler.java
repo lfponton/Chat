@@ -1,6 +1,7 @@
 package server.network;
 
 import server.model.MessageSender;
+import transferobjects.Message;
 import transferobjects.Request;
 
 import java.beans.PropertyChangeEvent;
@@ -13,14 +14,17 @@ public class SocketHandler implements Runnable
 {
   private Socket socket;
   private MessageSender messageSender;
+  private Pool pool;
+  private String username;
 
   private ObjectOutputStream outToClient;
   private ObjectInputStream inFromClient;
 
-  public SocketHandler(Socket socket, MessageSender messageSender)
+  public SocketHandler(Socket socket, MessageSender messageSender, Pool pool)
   {
     this.socket = socket;
     this.messageSender = messageSender;
+    this.pool = pool;
 
     try
     {
@@ -39,14 +43,20 @@ public class SocketHandler implements Runnable
     {
       System.out.println("Server handler accepting requests.");
       Request request = (Request) inFromClient.readObject();
-      System.out.println(request.getType());
-      System.out.println(request.getArgument());
-      if("Listener".equals(request.getType())) {
+      if ("Listener".equals(request.getType())) {
         messageSender.addPropertyChangeListener("NewMessage", this::onNewMessage);
+
       }
-      else if("SendMessage".equals(request.getType())) {
-        String result = messageSender.sendMessage((String) request.getArgument());
+      else if ("SendMessage".equals(request.getType())) {
+        Message message = (Message) request.getArgument();
+        this.username = message.getUsername();
+        pool.addConnection(this, message);
+        String result = messageSender.sendMessage(message.toString());
         outToClient.writeObject(new Request(("NewMessage"), result));
+      }
+      else if ("NumberOfConnections".equals(request.getType())) {
+        String numberOfConnections = String.valueOf(pool.size());
+        outToClient.writeObject(new Request(("NumberOfConnections"), numberOfConnections));
       }
     }
     catch (IOException | ClassNotFoundException e)
@@ -65,5 +75,10 @@ public class SocketHandler implements Runnable
     {
       e.printStackTrace();
     }
+  }
+
+  public String getUsername()
+  {
+    return username;
   }
 }

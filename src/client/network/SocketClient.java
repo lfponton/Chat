@@ -1,5 +1,6 @@
 package client.network;
 
+import transferobjects.Message;
 import transferobjects.Request;
 
 import java.beans.PropertyChangeListener;
@@ -8,14 +9,15 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.List;
 
 public class SocketClient implements Client
 {
   private PropertyChangeSupport support;
+  private String username;
 
   public SocketClient() {
     support = new PropertyChangeSupport(this);
+    username = "";
   }
 
   @Override public void startClient()
@@ -34,6 +36,12 @@ public class SocketClient implements Client
     }
   }
 
+  @Override public void createUser(String username)
+  {
+    this.username = username;
+  }
+
+
   private void listenToServer(ObjectOutputStream outToServer, ObjectInputStream inFromServer)
   {
     try
@@ -50,7 +58,33 @@ public class SocketClient implements Client
     }
   }
 
-  private Request request(String arg, String type)
+  private Request requestMessage(String arg, String type)
+      throws IOException, ClassNotFoundException
+  {
+    Socket socket = new Socket("localhost", 1234);
+    ObjectOutputStream outToServer = new ObjectOutputStream(socket.getOutputStream());
+    ObjectInputStream inFromServer = new ObjectInputStream(socket.getInputStream());
+    outToServer.writeObject(new Request(type, new Message(username, arg)));
+    return (Request) inFromServer.readObject();
+  }
+
+
+  @Override public String sendMessage(String str)
+  {
+    Message message = new Message(username, str);
+    try
+    {
+      Request response = requestMessage(str, "SendMessage");
+      return (String) response.getArgument();
+    }
+    catch (IOException | ClassNotFoundException e)
+    {
+      e.printStackTrace();
+    }
+    return message.toString();
+  }
+
+  private Request requestConnections(String arg, String type)
       throws IOException, ClassNotFoundException
   {
     Socket socket = new Socket("localhost", 1234);
@@ -59,34 +93,18 @@ public class SocketClient implements Client
     outToServer.writeObject(new Request(type, arg));
     return (Request) inFromServer.readObject();
   }
-
-
-  @Override public String sendMessage(String str)
+  @Override public String getNumberOfConnections()
   {
-    try
-    {
-      Request response = request(str, "SendMessage");
-      return (String) response.getArgument();
-    }
-    catch (IOException | ClassNotFoundException e)
-    {
-      e.printStackTrace();
-    }
-    return str;
-  }
-
-  @Override public List<String > getMessages()
-  {
-    try
-    {
-      Request response = request(null, "SendMessage");
-      return (List<String>) response.getArgument();
-    }
-    catch (IOException | ClassNotFoundException e)
-    {
-      e.printStackTrace();
-    }
-    return null;
+      try
+      {
+        Request response = requestConnections("1", "NumberOfConnections");
+        return (String) response.getArgument();
+      }
+      catch (IOException | ClassNotFoundException e)
+      {
+        e.printStackTrace();
+      };
+    return "1";
   }
 
   @Override public void addPropertyChangeListener(String name,

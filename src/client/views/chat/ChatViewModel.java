@@ -10,26 +10,31 @@ public class ChatViewModel
 {
   private MessageSender messageSender;
   private StringProperty message, messages;
+  private String numberOfConnections;
 
   public ChatViewModel(MessageSender messageSender)
   {
     this.messageSender = messageSender;
     messages = new SimpleStringProperty();
     message = new SimpleStringProperty();
+    numberOfConnections = "1";
     messageSender.addPropertyChangeListener("NewMessage", this::onNewMessage);
   }
 
   private void onNewMessage(PropertyChangeEvent evt)
   {
     messages.setValue((String) evt.getNewValue());
-    System.out.println(messages);
   }
 
   public void sendMessage()
   {
     String input = message.get();
-    System.out.println(input);
     messageSender.sendMessage(input);
+  }
+
+  public String numberOfConnections()
+  {
+    return messageSender.getNumberOfConnections();
   }
 
   public StringProperty getMessages()
@@ -41,4 +46,6 @@ public class ChatViewModel
   {
     return message;
   }
+
+
 }
